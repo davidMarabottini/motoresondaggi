@@ -73,14 +73,79 @@ app.listen(3000, () =>{
 });
 
 app.get("/sondaggio/:sondaggioId",(req, res, next) => {
-	res.json({
-		"titolo": "Sondaggio di test",
-		"descrizione": "Primo sondaggio",
-		"id":1,
-		"domande":[
-			{"id":1,"testo":"Domanda 1"},
-			{"id":2,"testo":"Domanda 2"}
-		]
+	pool.getConnection(function(err,conn){
+		if (err) {
+			console.error("Errore nella get connection");
+			throw err;
+		}
+		conn.beginTransaction(function(err){
+			if(err){
+				console.error("Errore inizio transazione");
+				throw err;
+			}
+			//ToDo: Controllare se req.params.sondaggioId è il metodo miglore per ritrovare l'id del sondaggio o ne esiste un altro
+			console.info('la mia richiesta è ',req.params.sondaggioId);
+			console.info("Recupero sondaggio");
+			
+			conn.query(
+				'SELECT * FROM sondaggio s LEFT OUTER JOIN domanda d ON s.id = d.id_sondaggio  WHERE s.id=?', 
+				// 'SELECT id, nome as titolo, descrizione FROM sondaggio s WHERE s.id=?'
+				[req.params.sondaggioId], 
+				function(err, result) {
+					if(err){
+						console.error('Errore nel recupero del sondaggio');
+						throw err;
+					}
+					// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
+					result = JSON.parse(JSON.stringify(result));
+					console.info('il mio risultato è ',result);
+					myjson = {
+						"id": result[0].sondaggio,
+						"titolo": result[0].nome,
+						"descrizione":result[0].descrizione,
+					}
+					const l=result.length;
+					const domande = [];
+					console.info(result);
+					for(i=0; i < l; i++){
+						domande.push({"id":result[i].id,"testo":result[i].testo})
+					}
+					myjson.domande = domande;
+					res.json(myjson);
+				}
+			);
+			
+			// ToDo: Testare questo modo di fare, e capire se esiste un modo ancora migliore per gestire il tutto
+			/*
+			conn.query(
+				'SELECT id, nome as titolo, descrizione FROM sondaggio s WHERE s.id=?'
+				[req.params.sondaggioId], 
+				function(err, result) {
+					if(err){
+						console.error('Errore nel recupero del sondaggio');
+						throw err;
+					}
+					// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
+					result = JSON.parse(JSON.stringify(result));
+					console.info('il mio risultato è ',result);
+					conn.query(
+						'SELECT id, testo FROM domanda WHERE id_sondaggio=?',
+						[req.params.sondaggioId],
+						function(err, result_domande){
+							if(err){
+								console.error('Errorre nel recupero delle domande del sondaggio');
+								throw err;
+							}
+							// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
+							result_domande = JSON.parse(JSON.stringify(result_domande))
+							myjson.domande = result_domande;
+						}
+					);
+					res.json(myjson);
+				}
+			);
+			*/
+		});
 	});
 });
 

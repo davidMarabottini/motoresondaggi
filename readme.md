@@ -6,7 +6,7 @@ Un progetto di esempio per la gestione di sondaggi binari.
 
 ### [GET] /sondaggio/:id
 
-Un mock per ritornare un sondaggio con l'id specificato. La risposta json ha il formato
+Un metodo per ritornare un sondaggio con l'id specificato. La risposta json ha il formato
 
 ```
 {

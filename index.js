@@ -15,13 +15,13 @@ var pool      =    mysql.createPool({
     debug    :  true
 });
 
-function insert(sondaggio) {
-	pool.getConnection(function(err,conn){
+const insert = (sondaggio) =>{
+	pool.getConnection((err,conn) => {
 		if (err) {
 			console.error("Errore nella get connection");
 			throw err;
 		}
-		conn.beginTransaction(function(err){
+		conn.beginTransaction((err) => {
 			if(err){
 				console.error("Errore inizio transazione");
 				throw err;
@@ -30,9 +30,9 @@ function insert(sondaggio) {
 			conn.query(
 				'INSERT INTO sondaggio(nome,descrizione) values(?,?)', 
 				[sondaggio.nome, sondaggio.descrizione], 
-				function(err, result) {
+				(err, result) => {
 					if (err) { 
-						conn.rollback(function() {
+						conn.rollback(() => {
 							console.error("Rollback in seguito a errore inserimento sondaggio");
 							throw err;
 						});
@@ -45,18 +45,18 @@ function insert(sondaggio) {
 						conn.query(
 							'INSERT INTO domanda(id_sondaggio, testo) values(?,?)', 
 							[id, domande[i]],
-							function(err, result) {
+							(err, result) => {
 								if (err) { 
-									conn.rollback(function() {
+									conn.rollback(() => {
 										console.error("Rollback in serguito a errore inserimento domanda");
 								  		throw err;
 									});
 								}
 							}
 						);
-						conn.commit(function(err){
+						conn.commit((err) => {
 							if (err) {
-								conn.rollback(function(err){
+								conn.rollback((err) => {
 									throw err;
 								});
 							}
@@ -73,12 +73,12 @@ app.listen(3000, () =>{
 });
 
 app.get("/sondaggio/:sondaggioId",(req, res, next) => {
-	pool.getConnection(function(err,conn){
+	pool.getConnection((err,conn) => {
 		if (err) {
 			console.error("Errore nella get connection");
 			throw err;
 		}
-		conn.beginTransaction(function(err){
+		conn.beginTransaction((err) => {
 			if(err){
 				console.error("Errore inizio transazione");
 				throw err;
@@ -87,7 +87,7 @@ app.get("/sondaggio/:sondaggioId",(req, res, next) => {
 			conn.query(
 				'SELECT id, nome as titolo, descrizione FROM sondaggio s WHERE s.id=?',
 				req.params.sondaggioId, 
-				function(err, result) {
+				(err, result) => {
 					if(err){
 						console.error('Errore nel recupero del sondaggio', err);
 						throw err;
@@ -96,7 +96,7 @@ app.get("/sondaggio/:sondaggioId",(req, res, next) => {
 					conn.query(
 						'SELECT id, testo FROM domanda WHERE id_sondaggio=? ORDER BY id',
 						req.params.sondaggioId,
-						function(err, result_domande){
+						(err, result_domande) => {
 							if(err){
 								console.error('Errorre nel recupero delle domande del sondaggio', err);
 								throw err;

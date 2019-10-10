@@ -83,40 +83,7 @@ app.get("/sondaggio/:sondaggioId",(req, res, next) => {
 				console.error("Errore inizio transazione");
 				throw err;
 			}
-			//ToDo: Controllare se req.params.sondaggioId è il metodo miglore per ritrovare l'id del sondaggio o ne esiste un altro
-			console.info('la mia richiesta è ',req.params.sondaggioId);
 			console.info("Recupero sondaggio");
-			
-			conn.query(
-				'SELECT * FROM sondaggio s LEFT OUTER JOIN domanda d ON s.id = d.id_sondaggio  WHERE s.id=? order by d.id', 
-				[req.params.sondaggioId], 
-				function(err, result) {
-					if(err){
-						console.error('Errore nel recupero del sondaggio');
-						throw err;
-					}
-					// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
-					console.info('miorisultato',result,'/miorisultato');
-					result = JSON.parse(JSON.stringify(result));
-					console.info('il mio risultato è ',result);
-					myjson = {
-						"id": result[0].sondaggio,
-						"titolo": result[0].nome,
-						"descrizione": result[0].descrizione,
-					}
-					const l=result.length;
-					const domande = [];
-					console.info(result);
-					for(i=0; i < l; i++){
-						domande.push({"id":result[i].id,"testo":result[i].testo})
-					}
-					myjson.domande = domande;
-					res.json(myjson);
-				}
-			);
-			
-			// ToDo: Testare questo modo di fare, e capire se esiste un modo ancora migliore per gestire il tutto
-			/*
 			conn.query(
 				'SELECT id, nome as titolo, descrizione FROM sondaggio s WHERE s.id=?',
 				req.params.sondaggioId, 
@@ -125,9 +92,7 @@ app.get("/sondaggio/:sondaggioId",(req, res, next) => {
 						console.error('Errore nel recupero del sondaggio', err);
 						throw err;
 					}
-					// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
-					result = JSON.parse(JSON.stringify(result));
-					console.info('il mio risultato è ',result);
+					result = result[0];
 					conn.query(
 						'SELECT id, testo FROM domanda WHERE id_sondaggio=? ORDER BY id',
 						req.params.sondaggioId,
@@ -136,15 +101,13 @@ app.get("/sondaggio/:sondaggioId",(req, res, next) => {
 								console.error('Errorre nel recupero delle domande del sondaggio', err);
 								throw err;
 							}
-							// ToDo: capire come gestire in modo ottimale la trasformazione del risultato in json
-							result_domande = JSON.parse(JSON.stringify(result_domande))
 							result.domande = result_domande;
+							res.json(result);
 						}
 					);
-					res.json(result);
+					
 				}
 			);
-			*/
 		});
 	});
 });

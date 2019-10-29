@@ -1,6 +1,8 @@
 module.exports = Object.freeze({
+    CONNLIMIT: 100,
     HOST: 'localhost',
     USER: 'david',
     PASS: 'davidpass',
-    DATABASE: 'sondaggio'
+    DATABASE: 'sondaggio',
+    DEBUGMODE: true
 });

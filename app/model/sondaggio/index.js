@@ -1,32 +1,6 @@
-const mysql = require('mysql');
+const Model = require("../model");
 
-class Model{
-    constructor(host, user, password, database) {
-        this.pool =  mysql.createPool({
-            connectionLimit : 100,
-            host,
-            user,
-            password,
-            database,
-            debug    :  true
-        });
-    }
-    createPoolConnection(f) {
-        this.pool.getConnection((err,conn) => {
-            if (err) {
-                console.error("Errore nella get connection");
-                throw err;
-            }
-            conn.beginTransaction(err => {
-                if(err){
-                    console.error("Errore inizio transazione");
-                    throw err;
-                }
-                f(conn);
-            });
-        });
-    }
-
+class Sondaggio extends Model{
     insertSondaggio(sondaggio) {
         this.createPoolConnection((conn) => {
             console.info("Inserimento sondaggio");
@@ -34,7 +8,7 @@ class Model{
                 'INSERT INTO sondaggio(nome,descrizione) values(?,?)', 
                 [sondaggio.nome, sondaggio.descrizione], 
                 (err, result) => {
-                    if (err) { 
+                    if (err) {
                         conn.rollback(() => {
                             console.error("Rollback in seguito a errore inserimento sondaggio");
                             throw err;
@@ -105,5 +79,42 @@ class Model{
             );
         });
     }
+
+    insertResult(req, res, next) {
+        this.createPoolConnection((conn) => {
+            console.log('Inserimento nuovo risultato');
+            console.log(req.body);
+            console.log(req.params);
+            req.body.forEach(function(val){
+                let els = val.split('|');
+                els.unshift(req.params.userId);
+                console.info('els',els);
+                conn.query(
+                    'INSERT INTO risposta (id_user, id_domanda, valore) VALUES (?,?,?)',
+                    els,
+                    (err, result) => {
+                        if (err) { 
+                            conn.rollback(() => {
+                                console.error("Rollback in serguito a errore inserimento username");
+                                    throw err;
+                            });
+                        }
+                    }
+                );
+                conn.commit( err => {
+                    if (err) {
+                        conn.rollback(err => {
+                            throw err;
+                        });
+                    }
+                });
+            })
+        });
+    }
+
+    // getRisposteSondaggio(req, res, next) {
+    //     const sondaggio = this.getSondaggio(req, res, next);
+    //     console.info('il mio sondaggio è il seguente: ', sondaggio)
+    // }
 }
-module.exports = Model
+module.exports = Sondaggio
